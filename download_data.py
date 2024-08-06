@@ -34,12 +34,26 @@ def find_largest_dataset(datasets: list[dict], max_bytes: int) -> dict | None:
     """
     largest_dataset = None
     largest_size = 0
+    smallest_dataset_above_max = None
+    smallest_size_above_max = float("inf")
 
     for dataset in datasets:
         size = dataset["size"]
         if size > largest_size and size <= max_bytes:
             largest_size = size
             largest_dataset = dataset
+        if size > max_bytes and size < smallest_size_above_max:
+            smallest_size_above_max = size
+            smallest_dataset_above_max = dataset
+
+    if largest_size < max_bytes * 0.5:
+        if smallest_dataset_above_max:
+            print(
+                f"Warning: The largest found dataset within the threshold is quite small ({largest_size / (2**30):.2f} GB). "
+                f"The next larger dataset is {smallest_size_above_max / (2**30):.2f} GB. Consider increasing the size parameter."
+            )
+        else:
+            print("No larger dataset available.")
 
     return largest_dataset
 
