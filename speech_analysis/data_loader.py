@@ -21,7 +21,9 @@ def load_data(data_path: str) -> dict[str, dict[str, pd.DataFrame]]:
     for language in languages:
         validated_path = os.path.join(data_path, language, "validated.tsv")
         if os.path.exists(validated_path):
-            df = pd.read_csv(validated_path, sep="\t")
+            df = pd.read_csv(
+                validated_path, sep="\t", usecols=["path", "gender", "locale"]
+            )
             male_df = df[df["gender"] == "male_masculine"]
             female_df = df[df["gender"] == "female_feminine"]
             data[language] = {"male": male_df, "female": female_df}
