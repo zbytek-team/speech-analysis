@@ -1,36 +1,42 @@
-import requests
 import os
 import argparse
-from tqdm import tqdm
-import tarfile
-import shutil
+import logging
+import requests
+
+from utils.file_utils import download_file, extract_validated_and_clips_from_tar, ensure_directory_exists, delete_directory_if_exists
+
+from utils.logging_utils import setup_logging
+
+setup_logging()
+
+# Constants
+COMMONVOICE_API_URL = "https://commonvoice.mozilla.org/api/v1"
+DEFAULT_SAVE_DIR = "data"
+TMP_FOLDER_NAME = "tmp"
+DOWNLOAD_FILE_EXTENSION = ".tar.gz"
+BYTES_PER_GB = 2**30
 
 
 def get_download_url(language: str) -> list[dict]:
     """
-    Fetch dataset information for a given language.
+    Get the download URLs for the datasets of a specified language.
 
-    Args:
-        language (str): The language code.
-
-    Returns:
-        list[dict]: A list of dataset information dictionaries.
+    :param language: The language code for which to get datasets.
+    :return: A list of dictionaries containing dataset information.
     """
-    url = f"https://commonvoice.mozilla.org/api/v1/datasets/languages/{language}"
+    url = f"{COMMONVOICE_API_URL}/datasets/languages/{language}"
     response = requests.get(url)
+    logging.info(f"Retrieved dataset information for language: {language}")
     return response.json()
 
-
-def find_largest_dataset(datasets: list[dict], max_bytes: int) -> dict | None:
+def find_largest_dataset(datasets: list[dict], max_bytes: int, language: str) -> dict | None:
     """
-    Find the largest dataset within the size limit.
+    Find the largest dataset for a language that fits within the max_bytes limit.
 
-    Args:
-        datasets (list[dict]): List of dataset information dictionaries.
-        max_bytes (int): The maximum size in bytes.
-
-    Returns:
-        dict | None: The largest dataset within the size limit or None if no dataset is found.
+    :param datasets: List of available datasets.
+    :param max_bytes: Maximum allowed size for a dataset in bytes.
+    :param language: The language code for the dataset.
+    :return: The largest dataset dictionary that fits within max_bytes, or None if no dataset is found.
     """
     largest_dataset = None
     largest_size = 0
@@ -47,171 +53,85 @@ def find_largest_dataset(datasets: list[dict], max_bytes: int) -> dict | None:
             smallest_dataset_above_max = dataset
 
     if largest_size < max_bytes * 0.5:
+        logging.warning(f"The largest found {language} dataset within the threshold is quite small ({largest_size / BYTES_PER_GB:.2f} GB). ")
         if smallest_dataset_above_max:
-            print(
-                f"Warning: The largest found dataset within the threshold is quite small ({largest_size / (2**30):.2f} GB). "
-                f"The next larger dataset is {smallest_size_above_max / (2**30):.2f} GB. Consider increasing the size parameter."
-            )
+            logging.warning(f"The next larger {language} dataset is {smallest_size_above_max / BYTES_PER_GB:.2f} GB. Consider increasing the size parameter.")
         else:
-            print("No larger dataset available.")
+            logging.warning(f"No larger {language} dataset available.")
 
     return largest_dataset
 
-
-def download_file(url: str, save_path: str) -> None:
-    """
-    Download a file from a URL with a progress bar.
-
-    Args:
-        url (str): The URL of the file to download.
-        save_path (str): The path to save the downloaded file.
-    """
-    file_name = url.split("/")[-1].split("?")[0]
-
-    response = requests.get(url, stream=True)
-    total_size = int(response.headers.get("content-length", 0))
-    block_size = 1024
-
-    with open(save_path, "wb") as file, tqdm(
-        desc=file_name,
-        total=total_size,
-        unit="iB",
-        unit_scale=True,
-        unit_divisor=1024,
-    ) as bar:
-        for data in response.iter_content(chunk_size=block_size):
-            bar.update(len(data))
-            file.write(data)
-
-    print(f"Downloaded file saved to {save_path}")
-
-
-def extract_tar_file(file_path: str, extract_path: str) -> None:
-    """
-    Extract a tar.gz file to a specified directory, avoiding nested directories.
-
-    Args:
-        file_path (str): The path of the tar.gz file.
-        extract_path (str): The directory to extract the contents to.
-    """
-    print(f"Extracting {file_path} to {extract_path}")
-
-    with tarfile.open(file_path) as tar:
-        members = tar.getmembers()
-        top_level_dir = members[0].name.split("/")[0]
-        for member in members:
-            # Adjust the path to remove the top-level directory
-            member.path = os.path.relpath(member.path, top_level_dir)
-            tar.extract(member, path=extract_path)
-
-    # Move files from nested directory to the parent directory
-    extracted_files = os.listdir(extract_path)
-    for file_name in extracted_files:
-        full_file_name = os.path.join(extract_path, file_name)
-        if os.path.isdir(full_file_name):
-            for nested_file in os.listdir(full_file_name):
-                shutil.move(os.path.join(full_file_name, nested_file), extract_path)
-            os.rmdir(full_file_name)
-
-    os.remove(file_path)
-    print(f"Extraction complete and removed {file_path}")
-
-
 def process_language(language: str, max_bytes: int, save_path: str) -> None:
     """
-    Process a language by downloading and extracting its dataset.
+    Process downloading and extracting datasets for a specific language.
 
-    Args:
-        language (str): The language code.
-        max_bytes (int): The maximum size in bytes.
-        save_path (str): The path to save the extracted data.
+    :param language: The language code for the dataset.
+    :param max_bytes: Maximum allowed size for a dataset in bytes.
+    :param save_path: The path to save the downloaded data.
     """
+    logging.info(f"Processing language: {language}")
     try:
         datasets = get_download_url(language)
-        dataset = find_largest_dataset(datasets, max_bytes)
+        dataset = find_largest_dataset(datasets, max_bytes, language)
 
-        if dataset:
-            # Get the download path and encode it
-            download_path = dataset["download_path"].replace("{locale}", language)
-            download_path_encoded = download_path.replace("/", "%2F")
-            download_url = f"https://commonvoice.mozilla.org/api/v1/bucket/dataset/{download_path_encoded}"
+        if not dataset:
+            logging.warning(f"No suitable dataset found for language {language}")
+            return
 
-            # Fetch the actual download URL
-            response = requests.get(download_url)
-            download_info = response.json()
-            url = download_info["url"]
+        download_path = dataset["download_path"].replace("{locale}", language)
+        download_path_encoded = download_path.replace("/", "%2F")
+        download_url = f"{COMMONVOICE_API_URL}/bucket/dataset/{download_path_encoded}"
 
-            # Create temporary path for download
-            temp_path = os.path.join(save_path, "temp")
-            if not os.path.exists(temp_path):
-                os.makedirs(temp_path)
+        response = requests.get(download_url)
+        download_info = response.json()
+        url = download_info["url"]
 
-            # Download the file
-            file_name = os.path.join(temp_path, f"{language}.tar.gz")
-            download_file(url, file_name)
+        temp_path = os.path.join(save_path, TMP_FOLDER_NAME)
+        ensure_directory_exists(temp_path)
 
-            # Extract the file
-            extract_path = os.path.join(save_path, language)
+        file_name = os.path.join(temp_path, f"{language}{DOWNLOAD_FILE_EXTENSION}")
+        download_file(url, file_name)
 
-            # Remove existing directory if it exists
-            if os.path.exists(extract_path):
-                shutil.rmtree(extract_path)
-                print(f"Removed existing directory {extract_path}")
+        extract_path = os.path.join(save_path, language)
 
-            os.makedirs(extract_path)
-            extract_tar_file(file_name, extract_path)
+        delete_directory_if_exists(extract_path)
+        ensure_directory_exists(extract_path)
 
-            print(f"Processed language {language}")
-        else:
-            print(
-                f"No suitable dataset found for language {language} within the size limit."
-            )
+        extract_validated_and_clips_from_tar(file_name, extract_path)
+
+        logging.info(f"Completed processing language: {language}")
+
     except Exception as e:
-        print(f"An error occurred for language {language}: {e}")
+        logging.error(f"Error processing language {language}: {e}")
 
-
-def download_and_extract(
-    languages: list[str], data_size_gb: float, save_path: str
-) -> None:
+def download_and_extract(languages: list[str], data_size_gb: float, save_path: str) -> None:
     """
-    Download and extract datasets for a list of languages.
+    Manage the download and extraction of datasets for multiple languages.
 
-    Args:
-        languages (list[str]): List of language codes to download.
-        data_size_gb (float): The maximum size of data to download in GB.
-        save_path (str): The path to save the extracted data.
+    :param languages: List of language codes to download.
+    :param data_size_gb: Maximum total size of data to download in GB.
+    :param save_path: The path to save the downloaded data.
     """
-    bytes_per_gb = 2**30  # 1 GB in bytes
-    max_bytes = int(data_size_gb * bytes_per_gb)
-
-    # Create a temporary directory for downloads
-    temp_path = os.path.join(save_path, "temp")
-    if not os.path.exists(temp_path):
-        os.makedirs(temp_path)
+    max_bytes = int(data_size_gb * BYTES_PER_GB)
+    temp_path = os.path.join(save_path, TMP_FOLDER_NAME)
+    ensure_directory_exists(temp_path)
 
     for language in languages:
         process_language(language, max_bytes, save_path)
 
-    # Remove the temporary directory
-    if os.path.exists(temp_path):
-        shutil.rmtree(temp_path)
-        print(f"Removed temporary directory {temp_path}")
-
+    delete_directory_if_exists(temp_path)
 
 def get_available_languages() -> dict[str, str]:
     """
-    Fetch the list of available languages.
+    Retrieve the list of available languages and their codes.
 
-    Returns:
-        dict[str, str]: A dictionary of language symbols and their names.
+    :return: A dictionary of language codes and their respective names.
     """
-    print("Fetching available languages")
-
-    url = "https://commonvoice.mozilla.org/api/v1/languages/en/translations"
+    url = f"{COMMONVOICE_API_URL}/languages/en/translations"
     response = requests.get(url)
     text = response.text
 
-    # Extract the relevant section for languages
+    # Extract language information from response text
     languages_section = text.split("## Languages")[1].split("# [/]")[0].strip()
     languages = [
         line.split(" = ") for line in languages_section.split("\n") if " = " in line
@@ -219,37 +139,28 @@ def get_available_languages() -> dict[str, str]:
 
     return {symbol.strip(): name.strip() for symbol, name in languages}
 
-
 def main() -> None:
     """
-    Main function to parse arguments and download datasets.
+    Main function to parse arguments and initiate the download and extraction process.
     """
-    parser = argparse.ArgumentParser(
-        description="Download speech data from Mozilla Common Voice."
-    )
-    parser.add_argument(
-        "--languages", nargs="+", help="List of languages to download", required=True
-    )
-    parser.add_argument(
-        "--size", type=float, help="Total size of data to download in GB", required=True
-    )
-    parser.add_argument(
-        "--save_path", type=str, default="data", help="Path to save downloaded data"
-    )
+    parser = argparse.ArgumentParser(description="Download speech data from Mozilla Common Voice.")
+    parser.add_argument("--languages", nargs="+", help="List of languages to download", required=True)
+    parser.add_argument("--size", type=float, help="Total size of data to download in GB")
+    parser.add_argument("--save_path", type=str, default=DEFAULT_SAVE_DIR, help="Path to save downloaded data")
 
     args = parser.parse_args()
 
     available_languages = get_available_languages()
 
-    if "help" in args.languages or any(
-        lang not in available_languages for lang in args.languages
-    ):
+    # Check if specified languages are available
+    if "help" in args.languages or any(lang not in available_languages for lang in args.languages):
         print("Available languages:")
         for symbol, name in available_languages.items():
             print(f"{symbol}: {name}")
+    elif args.size is None:
+        print("Please specify the total size of data to download using the --size argument.")
     else:
         download_and_extract(args.languages, args.size, args.save_path)
-
 
 if __name__ == "__main__":
     main()
