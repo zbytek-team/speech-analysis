@@ -36,15 +36,17 @@ class FormantsAnalysis(AnalysisBase):
                     if f3 is not None:
                         self.formant_data['F3'].append(f3)
 
+
             except Exception as e:
                 logging.error(f"Error processing audio for path {path}: {e}")
+
 
     def create_plots(self):
         """
         Generate and save plots based on formant analysis results.
         """
-        # Check if there is data to visualize
-        if not self.formant_data['F1'] or not self.formant_data['F2']:
+        # Check if there is data to visualize for all formants
+        if not self.formant_data['F1'] or not self.formant_data['F2'] or not self.formant_data['F3']:
             logging.warning("Not enough formant data to visualize.")
             return
 
@@ -75,6 +77,11 @@ class FormantsAnalysis(AnalysisBase):
         f1_std = np.std(self.formant_data['F1'])
         f2_std = np.std(self.formant_data['F2'])
         f3_std = np.std(self.formant_data['F3'])
+
+        # Ensure there is data to create the bar plot
+        if np.isnan(f1_mean) or np.isnan(f2_mean) or np.isnan(f3_mean):
+            logging.warning("Insufficient data to create formant statistics bar plot.")
+            return
 
         fig, ax = plt.subplots()
         ax.bar(['F1', 'F2', 'F3'], [f1_mean, f2_mean, f3_mean], yerr=[f1_std, f2_std, f3_std], capsize=5)
