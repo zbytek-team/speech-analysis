@@ -2,7 +2,7 @@ import os
 import importlib
 import logging
 import librosa
-from .specific_analyses.analysis_base import AnalysisBase
+from .individual_analyses.analysis_base import AnalysisBase
 
 class Analyzer:
     def __init__(self, language: str, gender: str, df, audio_dir: str, output_dir: str):
@@ -50,16 +50,16 @@ class Analyzer:
 
     def _load_analysis_classes(self):
         """
-        Dynamically load all analysis classes from the specific_analyses directory.
+        Dynamically load all analysis classes from the individual_analyses directory.
 
         :return: A list of analysis class types.
         """
-        analyses_dir = os.path.join(os.path.dirname(__file__), 'specific_analyses')
+        analyses_dir = os.path.join(os.path.dirname(__file__), 'individual_analyses')
         analysis_classes = []
 
         for file_name in os.listdir(analyses_dir):
             if file_name.endswith('_analysis.py'):
-                module_name = f"analysis.specific_analyses.{file_name[:-3]}"
+                module_name = f"analysis.individual_analyses.{file_name[:-3]}"
                 module = importlib.import_module(module_name)
                 for attr_name in dir(module):
                     attr = getattr(module, attr_name)
