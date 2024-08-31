@@ -92,6 +92,6 @@ def load_validated_data(file_path: str) -> pd.DataFrame:
     df = df[df['gender'].notna()]
     
     # Simplify gender categories
-    df['gender'] = df['gender'].apply(lambda x: 'male' if 'male_masculine' in x else 'female' if 'female_feminine' in x else None)
+    df['gender'] = df['gender'].apply(lambda x: 'male' if x in ['male_masculine', 'male'] else 'female' if x in ['female_feminine', 'female'] else None)
     
     return df
