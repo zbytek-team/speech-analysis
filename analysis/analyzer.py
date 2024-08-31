@@ -29,6 +29,9 @@ class Analyzer:
 
         :return: Dictionary mapping file paths to preprocessed audio data and sample rates.
         """
+
+        logging.info(f"Preprocessing audio for {self.language} ({self.gender})")
+
         preprocessed_audio = {}
         for _, row in self.df.iterrows():
             file_path = os.path.join(self.audio_dir, row['path'])
@@ -46,6 +49,9 @@ class Analyzer:
                 preprocessed_audio[row['path']] = (y_normalized, sr)
             except Exception as e:
                 logging.error(f"Error processing file {file_path}: {e}")
+        
+        logging.info(f"Preprocessed {len(preprocessed_audio)} audio files for {self.language} ({self.gender})")
+
         return preprocessed_audio
 
     def _load_analysis_classes(self):
