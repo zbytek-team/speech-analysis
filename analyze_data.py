@@ -32,7 +32,14 @@ def main():
             continue
 
         logging.info(f"Processing language: {language}")
+        
 
+        # Check if the validated data file exists for the current language
+        if not os.path.exists(os.path.join(lang_path, 'validated.tsv')):
+            logging.warning(f"Validated data file not found for language: {language}. Skipping...")
+            continue
+
+        # Load validated data for the current language
         validated_data_path = os.path.join(lang_path, 'validated.tsv')
         df = load_validated_data(validated_data_path)
 
