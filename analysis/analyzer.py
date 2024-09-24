@@ -6,15 +6,6 @@ from .individual_analyses.analysis_base import AnalysisBase
 
 class Analyzer:
     def __init__(self, language: str, gender: str, df, audio_dir: str, output_dir: str):
-        """
-        Initialize the Analyzer with language, gender, data, and directory paths.
-
-        :param language: The language being processed.
-        :param gender: The gender being processed.
-        :param df: DataFrame containing metadata about audio files.
-        :param audio_dir: Directory where the audio files are stored.
-        :param output_dir: Directory to save analysis results.
-        """
         self.language = language
         self.gender = gender
         self.df = df
@@ -24,12 +15,6 @@ class Analyzer:
         self.preprocessed_audio = self._load_and_preprocess_audio()
 
     def _load_and_preprocess_audio(self):
-        """
-        Load and preprocess audio files in-memory for analysis.
-
-        :return: Dictionary mapping file paths to preprocessed audio data and sample rates.
-        """
-
         logging.info(f"Preprocessing audio for {self.language} ({self.gender})")
 
         preprocessed_audio = {}
@@ -55,11 +40,6 @@ class Analyzer:
         return preprocessed_audio
 
     def _load_analysis_classes(self):
-        """
-        Dynamically load all analysis classes from the individual_analyses directory.
-
-        :return: A list of analysis class types.
-        """
         analyses_dir = os.path.join(os.path.dirname(__file__), 'individual_analyses')
         analysis_classes = []
 
@@ -75,9 +55,6 @@ class Analyzer:
         return analysis_classes
 
     def run_analyses(self):
-        """
-        Run all loaded analyses on the preprocessed audio data.
-        """
         for AnalysisClass in self.analysis_classes:
             analysis_instance = AnalysisClass(self.preprocessed_audio, self.output_dir)
             logging.info(f"Running {AnalysisClass.__name__} for {self.language} ({self.gender})")

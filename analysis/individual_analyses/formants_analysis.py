@@ -6,9 +6,6 @@ from .analysis_base import AnalysisBase
 
 class FormantsAnalysis(AnalysisBase):
     def perform_analysis(self):
-        """
-        Perform formant analysis on the preprocessed audio data.
-        """
         self.formant_data = {'F1': [], 'F2': [], 'F3': []}
 
         for path, (audio, sr) in self.preprocessed_audio.items():
@@ -42,9 +39,6 @@ class FormantsAnalysis(AnalysisBase):
 
 
     def create_plots(self):
-        """
-        Generate and save plots based on formant analysis results.
-        """
         # Check if there is data to visualize for all formants
         if not self.formant_data['F1'] or not self.formant_data['F2'] or not self.formant_data['F3']:
             logging.warning("Not enough formant data to visualize.")
