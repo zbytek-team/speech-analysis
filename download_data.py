@@ -1,10 +1,9 @@
-import os
 import argparse
 import logging
 import requests
+from pathlib import Path
 
 from utils.file_utils import download_file, extract_validated_and_clips_from_tar, ensure_directory_exists, delete_directory_if_exists
-
 from utils.logging_utils import setup_logging
 
 setup_logging()
@@ -22,6 +21,7 @@ def get_download_url(language: str) -> list[dict]:
     response = requests.get(url)
     logging.info(f"Retrieved dataset information for language: {language}")
     return response.json()
+
 
 def find_largest_dataset(datasets: list[dict], max_bytes: int, language: str) -> dict | None:
     largest_dataset = None
@@ -47,6 +47,7 @@ def find_largest_dataset(datasets: list[dict], max_bytes: int, language: str) ->
 
     return largest_dataset
 
+
 def process_language(language: str, max_bytes: int, save_path: str) -> None:
     logging.info(f"Processing language: {language}")
     try:
@@ -65,13 +66,13 @@ def process_language(language: str, max_bytes: int, save_path: str) -> None:
         download_info = response.json()
         url = download_info["url"]
 
-        temp_path = os.path.join(save_path, TMP_FOLDER_NAME)
+        temp_path = Path(save_path) / TMP_FOLDER_NAME
         ensure_directory_exists(temp_path)
 
-        file_name = os.path.join(temp_path, f"{language}{DOWNLOAD_FILE_EXTENSION}")
+        file_name = temp_path / f"{language}{DOWNLOAD_FILE_EXTENSION}"
         download_file(url, file_name)
 
-        extract_path = os.path.join(save_path, language)
+        extract_path = Path(save_path) / language
 
         delete_directory_if_exists(extract_path)
         ensure_directory_exists(extract_path)
@@ -83,15 +84,17 @@ def process_language(language: str, max_bytes: int, save_path: str) -> None:
     except Exception as e:
         logging.error(f"Error processing language {language}: {e}")
 
+
 def download_and_extract(languages: list[str], data_size_gb: float, save_path: str) -> None:
     max_bytes = int(data_size_gb * BYTES_PER_GB)
-    temp_path = os.path.join(save_path, TMP_FOLDER_NAME)
+    temp_path = Path(save_path) / TMP_FOLDER_NAME
     ensure_directory_exists(temp_path)
 
     for language in languages:
         process_language(language, max_bytes, save_path)
 
     delete_directory_if_exists(temp_path)
+
 
 def get_available_languages() -> dict[str, str]:
     url = f"{COMMONVOICE_API_URL}/languages/en/translations"
@@ -105,6 +108,7 @@ def get_available_languages() -> dict[str, str]:
     ]
 
     return {symbol.strip(): name.strip() for symbol, name in languages}
+
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Download speech data from Mozilla Common Voice.")
@@ -126,5 +130,7 @@ def main() -> None:
     else:
         download_and_extract(args.languages, args.size, args.save_path)
 
+
 if __name__ == "__main__":
     main()
+
