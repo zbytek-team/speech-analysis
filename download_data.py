@@ -18,26 +18,12 @@ BYTES_PER_GB = 2**30
 
 
 def get_download_url(language: str) -> list[dict]:
-    """
-    Get the download URLs for the datasets of a specified language.
-
-    :param language: The language code for which to get datasets.
-    :return: A list of dictionaries containing dataset information.
-    """
     url = f"{COMMONVOICE_API_URL}/datasets/languages/{language}"
     response = requests.get(url)
     logging.info(f"Retrieved dataset information for language: {language}")
     return response.json()
 
 def find_largest_dataset(datasets: list[dict], max_bytes: int, language: str) -> dict | None:
-    """
-    Find the largest dataset for a language that fits within the max_bytes limit.
-
-    :param datasets: List of available datasets.
-    :param max_bytes: Maximum allowed size for a dataset in bytes.
-    :param language: The language code for the dataset.
-    :return: The largest dataset dictionary that fits within max_bytes, or None if no dataset is found.
-    """
     largest_dataset = None
     largest_size = 0
     smallest_dataset_above_max = None
@@ -62,13 +48,6 @@ def find_largest_dataset(datasets: list[dict], max_bytes: int, language: str) ->
     return largest_dataset
 
 def process_language(language: str, max_bytes: int, save_path: str) -> None:
-    """
-    Process downloading and extracting datasets for a specific language.
-
-    :param language: The language code for the dataset.
-    :param max_bytes: Maximum allowed size for a dataset in bytes.
-    :param save_path: The path to save the downloaded data.
-    """
     logging.info(f"Processing language: {language}")
     try:
         datasets = get_download_url(language)
@@ -105,13 +84,6 @@ def process_language(language: str, max_bytes: int, save_path: str) -> None:
         logging.error(f"Error processing language {language}: {e}")
 
 def download_and_extract(languages: list[str], data_size_gb: float, save_path: str) -> None:
-    """
-    Manage the download and extraction of datasets for multiple languages.
-
-    :param languages: List of language codes to download.
-    :param data_size_gb: Maximum total size of data to download in GB.
-    :param save_path: The path to save the downloaded data.
-    """
     max_bytes = int(data_size_gb * BYTES_PER_GB)
     temp_path = os.path.join(save_path, TMP_FOLDER_NAME)
     ensure_directory_exists(temp_path)
@@ -122,11 +94,6 @@ def download_and_extract(languages: list[str], data_size_gb: float, save_path: s
     delete_directory_if_exists(temp_path)
 
 def get_available_languages() -> dict[str, str]:
-    """
-    Retrieve the list of available languages and their codes.
-
-    :return: A dictionary of language codes and their respective names.
-    """
     url = f"{COMMONVOICE_API_URL}/languages/en/translations"
     response = requests.get(url)
     text = response.text
@@ -140,9 +107,6 @@ def get_available_languages() -> dict[str, str]:
     return {symbol.strip(): name.strip() for symbol, name in languages}
 
 def main() -> None:
-    """
-    Main function to parse arguments and initiate the download and extraction process.
-    """
     parser = argparse.ArgumentParser(description="Download speech data from Mozilla Common Voice.")
     parser.add_argument("--languages", nargs="+", help="List of languages to download", required=True)
     parser.add_argument("--size", type=float, help="Total size of data to download in GB")
