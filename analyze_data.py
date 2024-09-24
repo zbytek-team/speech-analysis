@@ -13,10 +13,6 @@ DEFAULT_DATA_DIR = 'data'
 DEFAULT_OUTPUT_DIR = 'plots'
 
 def main():
-    """
-    Main function to load, preprocess, and analyze audio data for each language and gender.
-    It ensures output directories are properly managed and runs all analyses.
-    """
     parser = argparse.ArgumentParser(description="Analyze audio data from Mozilla Common Voice.")
     parser.add_argument("--data_dir", type=str, default=DEFAULT_DATA_DIR, help="Path to the input data directory.")
     parser.add_argument("--output_dir", type=str, default=DEFAULT_OUTPUT_DIR, help="Path to the output directory for plots.")

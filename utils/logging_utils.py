@@ -2,11 +2,6 @@ import logging
 import colorlog
 
 def setup_logging(level=logging.INFO):
-    """
-    Configure logging with colored output.
-
-    :param level: The logging level, default is logging.INFO.
-    """
     LOGGING_DATE_FORMAT = '%Y-%m-%d %H:%M:%S'
     LOGGING_FORMAT = '%(log_color)s%(asctime)s - %(levelname)s - %(message)s'
     LOG_COLORS = {
