@@ -1,5 +1,6 @@
 import os
 import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
 import logging
 from abc import ABC, abstractmethod
 
@@ -20,7 +21,7 @@ class AnalysisBase(ABC):
     def create_plots(self):
         pass
 
-    def save_plot(self, plot_name: str, fig: plt.Figure):
+    def save_plot(self, plot_name: str, fig: Figure):
         plot_path = os.path.join(self.output_dir, plot_name)
         fig.savefig(plot_path)
         plt.close(fig)
