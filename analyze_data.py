@@ -4,6 +4,7 @@ from pathlib import Path
 from utils.file_utils import load_validated_data, ensure_directory_exists, delete_directory_if_exists
 from analysis.analyzer import Analyzer
 from utils.logging_utils import setup_logging
+import polars as pl
 
 setup_logging()
 
@@ -17,8 +18,8 @@ def main():
     parser.add_argument("--output_dir", type=Path, default=DEFAULT_OUTPUT_DIR, help="Path to the output directory for plots.")
     args = parser.parse_args()
 
-    data_dir = args.data_dir
-    output_dir = args.output_dir
+    data_dir: Path = args.data_dir
+    output_dir: Path = args.output_dir
 
     # Iterate over each language directory in the data directory
     for language_dir in data_dir.iterdir():
@@ -38,11 +39,11 @@ def main():
 
         # Process each gender separately
         for gender in ['male', 'female']:
-            # Filter DataFrame for the current gender
-            gender_df = df[df['gender'].str.contains(gender, na=False)]
-            if gender_df.empty:
+            gender_df = df.filter(pl.col("gender") == gender)
+            
+            if gender_df.is_empty():
                 continue
-
+            
             # Define output path for plots
             output_path = output_dir / language_dir.name / gender
 
@@ -51,15 +52,13 @@ def main():
                 delete_directory_if_exists(output_path)
             ensure_directory_exists(output_path)
 
-            
-            # Initialize the Analyzer with loaded data and paths
-            analyzer = Analyzer(language, gender, gender_df, audio_dir, output_path)
-            
-            # Run analyses for the current language and gender
+            clips_dir = language_dir / 'clips'
+
+            analyzer = Analyzer(gender_df, language_dir, clips_dir, output_path)
             analyzer.run_analyses()
-            audio_dir = language_dir / 'clips'
 
         logging.info(f"Completed processing for language: {language_dir.name}")
 
 if __name__ == '__main__':
     main()
+
