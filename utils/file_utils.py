@@ -71,7 +71,7 @@ def load_validated_data(file_path: Path) -> pl.DataFrame:
             pl.col("path"),
             pl.col("gender").map_elements(_simplify_genders, return_dtype=pl.String) 
         )
-        .filter(pl.col("gender").is_not_null())
+        .drop_nulls()
     )
 
     df = q.collect()
