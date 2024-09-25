@@ -2,7 +2,7 @@ import tarfile
 import shutil
 import logging
 import requests
-import pandas as pd
+import polars as pl
 from tqdm import tqdm
 from pathlib import Path
 
@@ -56,14 +56,25 @@ def delete_directory_if_exists(path: Path) -> None:
     else:
         logging.info(f"Directory does not exist: {path}")
 
-def load_validated_data(file_path: Path) -> pd.DataFrame:
-    df = pd.read_csv(file_path, sep='\t', usecols=['path', 'gender'])
-    
-    # Remove rows where gender is NaN
-    df = df[df['gender'].notna()]
-    
-    # Simplify gender categories
-    df['gender'] = df['gender'].apply(lambda x: 'male' if x in ['male_masculine', 'male'] else 'female' if x in ['female_feminine', 'female'] else None)
+def _simplify_genders(gender: str) -> str|None:
+    match gender:
+        case "male_masculine" | "male":
+            return "male"
+        case "female_feminine" | "female":
+            return "female"
+    return None
+
+def load_validated_data(file_path: Path) -> pl.DataFrame:
+    q = (
+        pl.scan_csv(file_path, separator='\t')
+        .select(
+            pl.col("path"),
+            pl.col("gender").map_elements(_simplify_genders, return_dtype=pl.String) 
+        )
+        .filter(pl.col("gender").is_not_null())
+    )
+
+    df = q.collect()
     
     return df
 
