@@ -15,7 +15,7 @@ def get_download_url(language: str) -> list:
     return response.json()
 
 
-def find_largest_dataset(datasets: list, max_bytes: int, language: str) -> dict:
+def find_largest_dataset(datasets: list, max_bytes: int, language: str) -> dict | None:
     largest_dataset = None
     largest_size = 0
     smallest_dataset_above_max = None
@@ -80,7 +80,7 @@ def extract_validated_and_clips_from_tar(file_path: Path, extract_path: Path) ->
     file_path.unlink()
 
 
-def download_language_dataset(language: str, max_bytes: int, temp_path: Path) -> Path:
+def download_language_dataset(language: str, max_bytes: int, temp_path: Path) -> Path | None:
     datasets = get_download_url(language)
     dataset = find_largest_dataset(datasets, max_bytes, language)
 
