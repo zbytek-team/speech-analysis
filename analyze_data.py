@@ -1,64 +1,82 @@
-import logging
 import argparse
+import logging
 from pathlib import Path
-from utils.file_utils import load_validated_data, ensure_directory_exists, delete_directory_if_exists
-from analysis.analyzer import Analyzer
+import pandas as pd
+from tqdm import tqdm
+
 from utils.logging_utils import setup_logging
-import polars as pl
+from utils.file_utils import ensure_directory_exists
+
+# Explicitly import analyzers
+from analyzers.pitch_analyzer import PitchAnalyzer
+from analyzers.formant_analyzer import FormantAnalyzer
+from analyzers.spectral_analyzer import SpectralAnalyzer
+from analyzers.mfcc_analyzer import MFCCAnalyzer
+from analyzers.zero_crossing_analyzer import ZeroCrossingAnalyzer
+from analyzers.hnr_analyzer import HarmonicToNoiseRatioAnalyzer
+
+# Map of analyzer names to classes
+ANALYZER_MAP = {
+    'pitch': PitchAnalyzer,
+    'formant': FormantAnalyzer,
+    'spectral': SpectralAnalyzer,
+    'mfcc': MFCCAnalyzer,
+    'zero_crossing': ZeroCrossingAnalyzer,
+    'hnr': HarmonicToNoiseRatioAnalyzer,
+}
 
 setup_logging()
 
-# Constants
-DEFAULT_DATA_DIR = Path('data')
-DEFAULT_OUTPUT_DIR = Path('plots')
+def analyze_language_data(languages, data_dir, output_dir, selected_analyzers):
+    analyzers = [ANALYZER_MAP[name]() for name in selected_analyzers]
+    ensure_directory_exists(Path(output_dir))
+
+    for language in languages:
+        language_dir = Path(data_dir) / language
+        if not language_dir.exists():
+            logging.warning(f"Language directory not found: {language_dir}")
+            continue
+
+        genders = [d.name for d in language_dir.iterdir() if d.is_dir()]
+        for gender in genders:
+            audio_dir = language_dir / gender
+            if not audio_dir.exists():
+                logging.warning(f"Directory not found: {audio_dir}")
+                continue
+
+            audio_files = list(audio_dir.glob('*.mp3'))
+            stats = []
+
+            for audio_file in tqdm(audio_files, desc=f"Analyzing {language}-{gender}"):
+                file_stats = {'file': audio_file.name, 'language': language, 'gender': gender}
+
+                for analyzer in analyzers:
+                    try:
+                        analysis_result = analyzer.analyze(audio_file)
+                        file_stats.update(analysis_result)
+                    except Exception as e:
+                        logging.error(f"Error analyzing {audio_file} with {analyzer.__class__.__name__}: {e}")
+                        continue
+
+                stats.append(file_stats)
+
+            # Save stats to CSV
+            output_file = Path(output_dir) / f"{language}_{gender}_stats.csv"
+            df = pd.DataFrame(stats)
+            df.to_csv(output_file, index=False)
+            logging.info(f"Saved statistics to {output_file}")
 
 def main():
-    parser = argparse.ArgumentParser(description="Analyze audio data from Mozilla Common Voice.")
-    parser.add_argument("--data_dir", type=Path, default=DEFAULT_DATA_DIR, help="Path to the input data directory.")
-    parser.add_argument("--output_dir", type=Path, default=DEFAULT_OUTPUT_DIR, help="Path to the output directory for plots.")
+    parser = argparse.ArgumentParser(description="Analyze preprocessed audio data and extract statistics.")
+    parser.add_argument("--languages", nargs="+", required=True, help="List of languages to analyze")
+    parser.add_argument("--data_dir", type=str, default="data", help="Path to the preprocessed data directory")
+    parser.add_argument("--output_dir", type=str, default="analysis_results", help="Path to save analysis results")
+    parser.add_argument("--analyzers", nargs="+", required=True, choices=ANALYZER_MAP.keys(),
+                        help="List of analyzers to run")
     args = parser.parse_args()
 
-    data_dir: Path = args.data_dir
-    output_dir: Path = args.output_dir
+    analyze_language_data(args.languages, args.data_dir, args.output_dir, args.analyzers)
 
-    # Iterate over each language directory in the data directory
-    for language_dir in data_dir.iterdir():
-        if not language_dir.is_dir():
-            continue
-
-        logging.info(f"Processing language: {language_dir.name}")
-
-        # Check if the validated data file exists for the current language
-        validated_data_path = language_dir / 'validated.tsv'
-        if not validated_data_path.exists():
-            logging.warning(f"Validated data file not found for language: {language_dir.name}. Skipping...")
-            continue
-
-        # Load validated data for the current language
-        df = load_validated_data(validated_data_path)
-
-        # Process each gender separately
-        for gender in ['male', 'female']:
-            gender_df = df.filter(pl.col("gender") == gender)
-            
-            if gender_df.is_empty():
-                continue
-            
-            # Define output path for plots
-            output_path = output_dir / language_dir.name / gender
-
-            # Clear existing output directory if it exists, or create a new one
-            if output_path.exists():
-                delete_directory_if_exists(output_path)
-            ensure_directory_exists(output_path)
-
-            clips_dir = language_dir / 'clips'
-
-            analyzer = Analyzer(gender_df, language_dir, clips_dir, output_path)
-            analyzer.run_analyses()
-
-        logging.info(f"Completed processing for language: {language_dir.name}")
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
 
