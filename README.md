@@ -14,8 +14,7 @@ To run this project, you need the following libraries and tools:
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/your-repo/speech-analysis-project.git
-
+   git clone https://github.com/ack2406/speech-analysis
    cd speech-analysis-project
    ```
 
