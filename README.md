@@ -6,7 +6,7 @@ This research project at the Gdańsk University of Technology aims to develop a 
 
 To run this project, you need the following libraries and tools:
 
-- **Python** 3.6 or higher
+- **Python** 3.12 or higher
 - **pip** (Python package manager)
 
 ## **Installation**
