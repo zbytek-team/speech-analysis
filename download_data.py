@@ -60,7 +60,6 @@ def main():
     else:
         logging.info("Skipping preprocessing step as per the argument.")
 
-    # Clean up temp directory if not skipping download
     if not skip_download:
         delete_directory_if_exists(temp_path)
 
