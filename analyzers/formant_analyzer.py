@@ -2,6 +2,7 @@ from .base_analyzer import BaseAnalyzer
 import parselmouth
 import numpy as np
 
+
 class FormantAnalyzer(BaseAnalyzer):
     def analyze(self, audio_path):
         snd = parselmouth.Sound(str(audio_path))
