@@ -69,31 +69,6 @@ The analysis results are saved as CSV files in the `analysis_results/` directory
 
 - Example output: `pl_male_stats.csv`, `en_female_stats.csv`.
 
-## **Project Structure**
-
-```
-.
-├── analyze_data.py                # Main script for running audio analysis
-├── download_data.py               # Main script for downloading and preprocessing data
-├── analyzers/                     # Directory for audio analyzers
-│   ├── base_analyzer.py           # Abstract base class for analyzers
-│   ├── formant_analyzer.py        # Formant frequency analyzer
-│   ├── hnr_analyzer.py            # Harmonic-to-noise ratio analyzer
-│   ├── mfcc_analyzer.py           # MFCC analyzer
-│   ├── pitch_analyzer.py          # Pitch analyzer
-│   ├── spectral_analyzer.py       # Spectral feature analyzer
-│   ├── zero_crossing_analyzer.py  # Zero-crossing rate analyzer
-├── utils/                         # Utility scripts
-│   ├── constants.py               # Constants used in the project
-│   ├── data_download_utils.py     # Functions for downloading and extracting data
-│   ├── data_preprocessing_utils.py # Functions for preprocessing audio data
-│   ├── file_utils.py              # File and directory utilities
-│   ├── logging_utils.py           # Logging configuration utilities
-├── data/                          # Directory for preprocessed audio data
-├── analysis_results/              # Directory for saving analysis results
-└── tmp/                           # Temporary directory for storing downloaded datasets
-```
-
 ## **License**
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
