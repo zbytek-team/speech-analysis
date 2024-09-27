@@ -4,9 +4,10 @@ import pandas as pd
 from tqdm import tqdm
 from pydub import AudioSegment
 from pydub.silence import detect_nonsilent
+from concurrent.futures import ProcessPoolExecutor, as_completed
+import os
 
 from utils.file_utils import ensure_directory_exists
-
 
 GENDER_MAP = {
     'male': 'male',
@@ -14,7 +15,6 @@ GENDER_MAP = {
     'female': 'female',
     'female_feminine': 'female'
 }
-
 
 def preprocess_language_data(language: str, extract_path: Path, save_path: str) -> None:
     validated_tsv_path = extract_path / "validated.tsv"
@@ -28,7 +28,6 @@ def preprocess_language_data(language: str, extract_path: Path, save_path: str) 
 
     process_and_save_audio_files(language, extract_path, save_path, df)
 
-
 def load_and_filter_metadata(validated_tsv_path: Path) -> pd.DataFrame:
     df = pd.read_csv(validated_tsv_path, sep='\t', usecols=["path", "gender"])
     df = df[df['gender'].notna()]
@@ -41,35 +40,55 @@ def load_and_filter_metadata(validated_tsv_path: Path) -> pd.DataFrame:
 
     return df
 
-
 def create_output_directories(language: str, save_path: str, df: pd.DataFrame) -> None:
     genders = df['gender'].unique()
     for gender in genders:
         output_path = Path(save_path) / language / gender
         ensure_directory_exists(output_path)
 
+def process_audio_file(row_dict, clips_path: Path, save_path: str, language: str):
+    audio_file_name = row_dict['path']
+    gender = row_dict['gender']
+    audio_path = clips_path / audio_file_name
+    if not audio_path.exists():
+        logging.warning(f"Audio file not found: {audio_path}")
+        return None  # Return None to indicate failure
+
+    try:
+        # Remove silence
+        trimmed_audio = remove_silence(audio_path)
+
+        # Save processed audio
+        output_file_path = Path(save_path) / language / gender / audio_file_name
+        trimmed_audio.export(output_file_path, format='mp3')
+
+        logging.debug(f"Processed and saved: {output_file_path}")
+        return True  # Success
+    except Exception as e:
+        logging.error(f"Error processing {audio_path}: {e}")
+        return None  # Return None to indicate failure
 
 def process_and_save_audio_files(language: str, extract_path: Path, save_path: str, df: pd.DataFrame) -> None:
     clips_path = extract_path / "clips"
-    for _, row in tqdm(df.iterrows(), total=df.shape[0], desc=f"Preprocessing {language}"):
-        audio_file_name = row['path']
-        audio_path = clips_path / audio_file_name
-        if not audio_path.exists():
-            logging.warning(f"Audio file not found: {audio_path}")
-            continue
+    total_files = df.shape[0]
 
-        try:
-            trimmed_audio = remove_silence(audio_path)
+    # Adjust the number of workers based on the system's capabilities
+    max_workers = os.cpu_count() or 1  # Number of CPU cores
 
-            gender = row['gender']
-            output_file_path = Path(save_path) / language / gender / audio_file_name
-            trimmed_audio.export(output_file_path, format='mp3')
+    # Prepare arguments for the process pool
+    tasks = [
+        (row_dict, clips_path, save_path, language)
+        for row_dict in df.to_dict('records')
+    ]
 
-            logging.debug(f"Processed and saved: {output_file_path}")
+    with ProcessPoolExecutor(max_workers=max_workers) as executor:
+        futures = {
+            executor.submit(process_audio_file, *task): task[0]['path'] for task in tasks
+        }
 
-        except Exception as e:
-            logging.error(f"Error processing {audio_path}: {e}")
-
+        # Use tqdm to display progress
+        for _ in tqdm(as_completed(futures), total=total_files, desc=f"Preprocessing {language}"):
+            pass  # We're just advancing the progress bar
 
 def remove_silence(audio_path, silence_thresh=-16, min_silence_len=500):
     """Remove silence from the beginning and end of an audio file."""
@@ -86,3 +105,4 @@ def remove_silence(audio_path, silence_thresh=-16, min_silence_len=500):
         trimmed_audio = audio
 
     return trimmed_audio
+
