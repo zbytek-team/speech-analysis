@@ -1,13 +1,15 @@
 import argparse
 import logging
 from pathlib import Path
+from typing import Any
 import pandas as pd
 from tqdm import tqdm
 
 from utils.logging_utils import setup_logging
 from utils.file_utils import ensure_directory_exists
 
-# Explicitly import analyzers
+from analyzers.base_analyzer import BaseAnalyzer
+
 from analyzers.pitch_analyzer import PitchAnalyzer
 from analyzers.formant_analyzer import FormantAnalyzer
 from analyzers.spectral_analyzer import SpectralAnalyzer
@@ -15,7 +17,6 @@ from analyzers.mfcc_analyzer import MFCCAnalyzer
 from analyzers.zero_crossing_analyzer import ZeroCrossingAnalyzer
 from analyzers.hnr_analyzer import HarmonicToNoiseRatioAnalyzer
 
-# Map of analyzer names to classes
 ANALYZER_MAP = {
     'pitch': PitchAnalyzer,
     'formant': FormantAnalyzer,
@@ -27,8 +28,9 @@ ANALYZER_MAP = {
 
 setup_logging()
 
-def analyze_language_data(languages, data_dir, output_dir, selected_analyzers):
-    analyzers = [ANALYZER_MAP[name]() for name in selected_analyzers]
+
+def analyze_language_data(languages: list[str], data_dir: str, output_dir: str, selected_analyzers: list[str]):
+    analyzers: list[BaseAnalyzer] = [ANALYZER_MAP[name]() for name in selected_analyzers]
     ensure_directory_exists(Path(output_dir))
 
     for language in languages:
@@ -45,7 +47,7 @@ def analyze_language_data(languages, data_dir, output_dir, selected_analyzers):
                 continue
 
             audio_files = list(audio_dir.glob('*.mp3'))
-            stats = []
+            stats: list[dict[str, Any]] = []
 
             for audio_file in tqdm(audio_files, desc=f"Analyzing {language}-{gender}"):
                 file_stats = {'file': audio_file.name, 'language': language, 'gender': gender}
@@ -60,11 +62,11 @@ def analyze_language_data(languages, data_dir, output_dir, selected_analyzers):
 
                 stats.append(file_stats)
 
-            # Save stats to CSV
             output_file = Path(output_dir) / f"{language}_{gender}_stats.csv"
             df = pd.DataFrame(stats)
             df.to_csv(output_file, index=False)
             logging.info(f"Saved statistics to {output_file}")
+
 
 def main():
     parser = argparse.ArgumentParser(description="Analyze preprocessed audio data and extract statistics.")
@@ -76,6 +78,7 @@ def main():
     args = parser.parse_args()
 
     analyze_language_data(args.languages, args.data_dir, args.output_dir, args.analyzers)
+
 
 if __name__ == "__main__":
     main()
