@@ -8,6 +8,19 @@ from utils.file_utils import ensure_directory_exists, delete_directory_if_exists
 from utils.constants import COMMONVOICE_API_URL, BYTES_PER_GB
 
 
+def get_available_languages() -> dict[str, str]:
+    url = f"{COMMONVOICE_API_URL}/languages/en/translations"
+    response = requests.get(url)
+    text = response.text
+
+    languages_section = text.split("## Languages")[1].split("# [/]")[0].strip()
+    languages = [
+        line.split(" = ") for line in languages_section.split("\n") if " = " in line
+    ]
+
+    return {symbol.strip(): name.strip() for symbol, name in languages}
+
+
 def get_download_url(language: str) -> list:
     url = f"{COMMONVOICE_API_URL}/datasets/languages/{language}"
     response = requests.get(url)
