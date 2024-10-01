@@ -4,11 +4,12 @@ from pathlib import Path
 from tqdm import tqdm
 import tarfile
 
-from utils.file_utils import ensure_directory_exists, delete_directory_if_exists
+from utils.file_manager import ensure_directory_exists, delete_directory_if_exists
 from utils.constants import COMMONVOICE_API_URL, BYTES_PER_GB
 
 
 def get_available_languages() -> dict[str, str]:
+    """Retrieve the list of available languages from Mozilla Common Voice."""
     url = f"{COMMONVOICE_API_URL}/languages/en/translations"
     response = requests.get(url)
     text = response.text
@@ -22,6 +23,7 @@ def get_available_languages() -> dict[str, str]:
 
 
 def get_download_url(language: str) -> list:
+    """Retrieve dataset URLs for a given language."""
     url = f"{COMMONVOICE_API_URL}/datasets/languages/{language}"
     response = requests.get(url)
     logging.info(f"Retrieved dataset information for language: {language}")
@@ -29,6 +31,7 @@ def get_download_url(language: str) -> list:
 
 
 def find_largest_dataset(datasets: list, max_bytes: int, language: str) -> dict | None:
+    """Find the largest dataset for a language within the specified size limit."""
     largest_dataset = None
     largest_size = 0
     smallest_dataset_above_max = None
@@ -58,6 +61,7 @@ def find_largest_dataset(datasets: list, max_bytes: int, language: str) -> dict 
 
 
 def download_file(url: str, save_path: Path) -> None:
+    """Download the dataset file from a URL."""
     file_name = url.split("/")[-1].split("?")[0]
     logging.info(f"Starting download of file: {file_name}")
     response = requests.get(url, stream=True)
@@ -79,6 +83,7 @@ def download_file(url: str, save_path: Path) -> None:
 
 
 def extract_validated_and_clips_from_tar(file_path: Path, extract_path: Path) -> None:
+    """Extract the validated.tsv and clips from a tar file."""
     logging.info(f"Starting extraction of tar file: {file_path}")
     with tarfile.open(file_path) as tar:
         for member in tar.getmembers():
@@ -93,7 +98,8 @@ def extract_validated_and_clips_from_tar(file_path: Path, extract_path: Path) ->
     file_path.unlink()
 
 
-def download_language_dataset(language: str, max_bytes: int, temp_path: Path) -> Path | None:
+def download_language_dataset(language: str, max_bytes: int, zips_dir: Path, destination: Path) -> Path | None:
+    """Download and extract the dataset for a specific language."""
     datasets = get_download_url(language)
     dataset = find_largest_dataset(datasets, max_bytes, language)
 
@@ -109,13 +115,14 @@ def download_language_dataset(language: str, max_bytes: int, temp_path: Path) ->
     download_info = response.json()
     url = download_info["url"]
 
-    file_name = temp_path / f"{language}.tar.gz"
+    file_name = zips_dir / f"{language}.tar.gz"
     download_file(url, file_name)
 
-    extract_path = temp_path / language
+    extract_path = destination / language
     delete_directory_if_exists(extract_path)
     ensure_directory_exists(extract_path)
 
     extract_validated_and_clips_from_tar(file_name, extract_path)
 
     return extract_path
+
