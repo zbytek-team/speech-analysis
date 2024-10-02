@@ -1,6 +1,7 @@
 import logging
 import tarfile
 import shutil
+import pandas as pd
 from pathlib import Path
 
 
@@ -37,3 +38,11 @@ def delete_directory_if_exists(path: Path):
     else:
         logging.debug(f"Directory does not exist: {path}")
 
+def load_csv_files_as_dataframes(path):
+    csv_files = Path(path).glob('*.csv')
+    data_frames = {}
+    for file in csv_files:
+        df = pd.read_csv(file)
+        data_frames[file.name] = df
+        logging.info(f"Loaded {file.name} file")
+    return data_frames
