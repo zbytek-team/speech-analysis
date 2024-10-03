@@ -22,7 +22,7 @@ def extract_features(language: str, source: Path, destination: Path, features: l
             logging.warning(f"No data found for gender: {gender} in language: {language}")
             continue
         
-        audio_files = list(gender_path.glob("**/*.mp3"))
+        audio_files = list(gender_path.glob("**/*.wav"))
         
         if not audio_files:
             logging.warning(f"No audio files found for gender: {gender} in language: {language}")
