@@ -1,18 +1,13 @@
 import parselmouth
 from pathlib import Path
-from tqdm import tqdm
 from feature_extraction.base_extractor import BaseExtractor
 
 class FormantExtractor(BaseExtractor):
-    def extract(self, source: Path, feature_list: list[dict]):
-        """Extract formant frequencies from audio files and update the shared feature list."""
-        for file_dict in tqdm(feature_list, desc="Extracting Formants"):
-            file_name = file_dict["file"]
-            audio_path = source / file_name
-            snd = parselmouth.Sound(str(audio_path))
-            formant = snd.to_formant_burg()
+    def extract_single(self, file: Path, entry: dict):
+        sound = parselmouth.Sound(str(file))
+        formant = sound.to_formant_burg()
 
-            file_dict["f1_mean"] = formant.get_mean(1) if formant.get_mean(1) else 0
-            file_dict["f2_mean"] = formant.get_mean(2) if formant.get_mean(2) else 0
-            file_dict["f3_mean"] = formant.get_mean(3) if formant.get_mean(3) else 0
+        entry['f1'] = formant.get_value_at_time(1, 0.5)
+        entry['f2'] = formant.get_value_at_time(2, 0.5)
+        entry['f3'] = formant.get_value_at_time(3, 0.5)
 
