@@ -1,74 +1,97 @@
-# **Speech Analysis Project**
+# Speech Analysis Project
 
 This research project at the Gdańsk University of Technology aims to develop a method for identifying characteristic frequency ranges for different languages. The goal is to review methods of speech frequency analysis and, based on speech recordings for various languages, verify Dr. Alfred Tomatis's theory that different languages have distinct frequency ranges for specific phonemes.
 
-## **Requirements**
+## Requirements
 
-To run this project, you need the following libraries and tools:
+- Python 3.12
 
-- **Python** 3.12 or higher
-- **pip** (Python package manager)
 
-## **Installation**
+## Installation
 
 1. Clone the repository:
 
-   ```bash
-   git clone https://github.com/ack2406/speech-analysis
-   cd speech-analysis-project
-   ```
+    ```bash
+    git clone https://github.com/ack2406/speech-analysis
+    cd speech-analysis
+    ```
 
-2. Install the required Python packages using `pip`:
+2. Install the required Python packages:
 
-   ```bash
-   pip install -r requirements.txt
-   ```
+    ```bash
+    pip install -r requirements.txt
+    ```
 
-## **Usage**
 
-### 1. Downloading and Preprocessing Data
+## Usage
 
-Use `download_data.py` to download and preprocess speech data from Mozilla Common Voice.
+This project uses a `Makefile` to streamline various tasks like downloading datasets, preprocessing data, extracting features, and cleaning temporary files.
 
-- Example command:
+### Download Data
 
-  ```bash
-  python download_data.py --languages pl en --size 5
-  ```
+To download speech data for specific languages:
 
-  This downloads speech data for Polish (`pl`) and English (`en`), assuming the size limit is 5 GB.
-  You can skip the download step and proceed directly to preprocessing with the `--skip-download` flag if data is already present.
+```bash
+make download LANGUAGES="pl en" DATA_SIZE=2
+```
 
-### 2. Running Speech Analysis
+- `LANGUAGES`: List of languages to download (e.g., `"pl en"`).
+- `DATA_SIZE`: Total size of the dataset in GB (e.g., `2`).
+- `DEST_DIR`: Directory to save the downloaded data (default: `data/raw`).
+- `ZIPS_DIR`: Temporary directory for storing downloaded zip files (default: `data/zips`).
 
-Use `analyze_data.py` to analyze preprocessed audio data and extract features.
+### Preprocess Data
 
-- Example command:
+To preprocess downloaded data (remove silence, organize by gender):
 
-  ```bash
-  python analyze_data.py --languages pl en --analyzers pitch formant spectral mfcc zero_crossing hnr
-  ```
+```bash
+make preprocess LANGUAGES="pl en"
+```
 
-  This analyzes the data for Polish and English, extracting features like pitch, formants, spectral features, MFCCs, zero-crossing rate, and harmonic-to-noise ratio (HNR).
+- `LANGUAGES`: List of languages to preprocess.
+- `DEST_DIR`: Directory to save preprocessed data (default: `data/processed`).
 
-### 3. Specifying Analyzers
+### Extract Features
 
-You can specify which analyzers to run using the `--analyzers` flag. Available analyzers:
+To extract features like pitch, MFCC, formants, and others:
 
-- `pitch`: Analyzes the fundamental frequency of the audio.
-- `formant`: Extracts the first and second formant frequencies (F1, F2).
-- `spectral`: Analyzes spectral features such as centroid, bandwidth, flatness, and rolloff.
-- `mfcc`: Extracts Mel-Frequency Cepstral Coefficients (MFCCs).
-- `zero_crossing`: Measures the zero-crossing rate (ZCR) of the audio.
-- `hnr`: Measures the harmonic-to-noise ratio (HNR).
+```bash
+make extract LANGUAGES="pl en" FEATURES="pitch mfcc formant"
+```
 
-### 4. Output
+- `LANGUAGES`: List of languages to extract features for.
+- `FEATURES`: List of features to extract (e.g., `pitch mfcc formant`).
+- `DEST_DIR`: Directory to save the extracted features (default: `data/features`).
 
-The analysis results are saved as CSV files in the `analysis_results/` directory. Each file corresponds to a specific language and gender, containing the extracted features for the analyzed audio files.
+### List Available Languages
 
-- Example output: `pl_male_stats.csv`, `en_female_stats.csv`.
+To list all available languages from Mozilla Common Voice:
 
-## **License**
+```bash
+make list-languages
+```
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+### Clean Zip Files
 
+To delete the `zips` directory containing the downloaded `.tar.gz` files after processing:
+
+```bash
+make clean-zips
+```
+
+## Directory Structure
+
+- `data/raw`: Stores raw, downloaded audio files.
+- `data/processed`: Contains preprocessed audio files (organized by gender).
+- `data/features`: Contains extracted features (e.g., pitch, MFCC) in CSV format.
+- `data/zips`: Temporary folder for downloaded zip files.
+
+## Additional Notes
+
+- You can adjust the `DEST_DIR` for all commands to point to a custom location.
+- The `ZIPS_DIR` can also be set to manage where zip files are temporarily stored.
+- Features include `pitch`, `mfcc`, `formant`, `hnr`, `spectral`, and `zero_crossing`.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
