@@ -1,43 +1,36 @@
-# Constants
 PYTHON=python
 SRC_DIR=src
-DEST_DIR=data/raw
+RAW_DATA_DIR=data/raw
+PROCESSED_DATA_DIR=data/processed
 ZIPS_DIR=data/zips
 FEATURES_DIR=data/features
 
-# Variables that must be provided as arguments
 LANGUAGES=
 DATA_SIZE=
 FEATURES=
 
-.PHONY: all download preprocess extract clean-zips list-languages
+.PHONY: all download preprocess extract clean-zips list-languages notebooks
 
-# Show available commands
 all:
 	@echo "Available commands:"
-	@echo "make download LANGUAGES=<languages> DATA_SIZE=<size_in_GB> DEST_DIR=<path_to_save_data>"
-	@echo "make preprocess LANGUAGES=<languages> DEST_DIR=<path_to_preprocessed_data>"
-	@echo "make extract LANGUAGES=<languages> FEATURES=<feature_list> DEST_DIR=<path_to_features>"
+	@echo "make download LANGUAGES=<languages> DATA_SIZE=<size_in_GB> [RAW_DATA_DIR=<path_to_save_raw_data>]" 
+	@echo "make preprocess LANGUAGES=<languages> [RAW_DATA_DIR=<path_to_raw_data>] [PROCESSED_DATA_DIR=<path_to_preprocessed_data>]"
+	@echo "make extract LANGUAGES=<languages> FEATURES=<feature_list> [PROCESSED_DATA_DIR=<path_to_preprocessed_data>] [FEATURES_DIR=<path_to_features>]"
+	@echo "make clean-zips [ZIPS_DIR=<path_to_zip_files>]"
 	@echo "make list-languages"
-	@echo "make clean-zips"
 
-# Download datasets
 download:
-	$(PYTHON) $(SRC_DIR)/download_data.py --languages $(LANGUAGES) --size $(DATA_SIZE) --destination $(DEST_DIR) --zips-dir $(ZIPS_DIR)
+	$(PYTHON) $(SRC_DIR)/download_data.py --languages $(LANGUAGES) --size $(DATA_SIZE) --destination $(RAW_DATA_DIR) --zips-dir $(ZIPS_DIR)
 
-# Preprocess the data
 preprocess:
-	$(PYTHON) $(SRC_DIR)/preprocess_data.py --languages $(LANGUAGES) --source $(DEST_DIR) --destination $(DEST_DIR)
+	$(PYTHON) $(SRC_DIR)/preprocess_data.py --languages $(LANGUAGES) --source $(RAW_DATA_DIR) --destination $(PROCESSED_DATA_DIR)
 
-# Extract features
 extract:
-	$(PYTHON) $(SRC_DIR)/extract_features.py --languages $(LANGUAGES) --source $(DEST_DIR) --destination $(FEATURES_DIR) --features $(FEATURES)
+	$(PYTHON) $(SRC_DIR)/extract_features.py --languages $(LANGUAGES) --source $(PROCESSED_DATA_DIR) --destination $(FEATURES_DIR) --features $(FEATURES)
 
-# Clean up zip files
 clean-zips:
 	$(PYTHON) $(SRC_DIR)/download_data.py --clean-zips --zips-dir $(ZIPS_DIR)
 
-# List available languages
 list-languages:
 	$(PYTHON) $(SRC_DIR)/download_data.py --list-languages
 
