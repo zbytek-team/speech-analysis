@@ -9,7 +9,7 @@ LANGUAGES=
 DATA_SIZE=
 FEATURES=
 
-.PHONY: all download preprocess extract clean-zips list-languages notebooks
+.PHONY: all download preprocess extract clean-zips list-languages
 
 all:
 	@echo "Available commands:"
