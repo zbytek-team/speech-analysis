@@ -4,32 +4,45 @@ This research project at the Gdańsk University of Technology aims to develop a 
 
 ## Requirements
 
-- Python 3.12
-
+- Python 3.12+
 
 ## Installation
 
 1. Clone the repository:
 
-    ```bash
-    git clone https://github.com/ack2406/speech-analysis
-    cd speech-analysis
-    ```
+   ```bash
+   git clone https://github.com/ack2406/speech-analysis
+   cd speech-analysis
+   ```
 
 2. Install the required Python packages:
 
-    ```bash
-    pip install -r requirements.txt
-    ```
-
+   ```bash
+   pip install -r requirements.txt
+   ```
 
 ## Usage
 
-This project uses a `Makefile` to streamline various tasks like downloading datasets, preprocessing data, extracting features, and cleaning temporary files.
+This project uses a `Makefile` to streamline various tasks like downloading datasets, extracting features, and listing available options.
+
+### Download and Extract Data
+
+To download speech data and extract features for specific languages in one step:
+
+```bash
+make download_and_extract LANGUAGES="pl en" DATA_SIZE=2 FEATURES="pitch mfcc"
+```
+
+- `LANGUAGES`: List of languages to download and extract features for (e.g., `"pl en"`).
+- `DATA_SIZE`: Total size of the dataset to download in GB (e.g., `2`).
+- `FEATURES`: List of features to extract (e.g., `"pitch mfcc"`). If not provided, all available features will be extracted.
+- `RAW_DATA_DIR`: Directory to save the downloaded data (default: `data/raw`).
+- `FEATURES_DIR`: Directory to save the extracted features (default: `data/features`).
+- `ZIPS_DIR`: Temporary directory for storing downloaded zip files (default: `data/zips`).
 
 ### Download Data
 
-To download speech data for specific languages:
+To only download speech data for specific languages:
 
 ```bash
 make download LANGUAGES="pl en" DATA_SIZE=2
@@ -37,31 +50,21 @@ make download LANGUAGES="pl en" DATA_SIZE=2
 
 - `LANGUAGES`: List of languages to download (e.g., `"pl en"`).
 - `DATA_SIZE`: Total size of the dataset in GB (e.g., `2`).
-- `DEST_DIR`: Directory to save the downloaded data (default: `data/raw`).
+- `RAW_DATA_DIR`: Directory to save the downloaded data (default: `data/raw`).
 - `ZIPS_DIR`: Temporary directory for storing downloaded zip files (default: `data/zips`).
-
-### Preprocess Data
-
-To preprocess downloaded data (remove silence, organize by gender):
-
-```bash
-make preprocess LANGUAGES="pl en"
-```
-
-- `LANGUAGES`: List of languages to preprocess.
-- `DEST_DIR`: Directory to save preprocessed data (default: `data/processed`).
 
 ### Extract Features
 
-To extract features like pitch, MFCC, formants, and others:
+To only extract features from already downloaded data:
 
 ```bash
-make extract LANGUAGES="pl en" FEATURES="pitch mfcc formant"
+make extract LANGUAGES="pl en" FEATURES="pitch mfcc"
 ```
 
-- `LANGUAGES`: List of languages to extract features for.
-- `FEATURES`: List of features to extract (e.g., `pitch mfcc formant`).
-- `DEST_DIR`: Directory to save the extracted features (default: `data/features`).
+- `LANGUAGES`: List of languages to extract features for (e.g., `"pl en"`).
+- `FEATURES`: List of features to extract (e.g., `"pitch mfcc"`). If not provided, all available features will be extracted.
+- `RAW_DATA_DIR`: Directory where the downloaded data is stored (default: `data/raw`).
+- `FEATURES_DIR`: Directory to save the extracted features (default: `data/features`).
 
 ### List Available Languages
 
@@ -71,26 +74,19 @@ To list all available languages from Mozilla Common Voice:
 make list-languages
 ```
 
-### Clean Zip Files
+### List Available Features
 
-To delete the `zips` directory containing the downloaded `.tar.gz` files after processing:
+To list all available features that can be extracted:
 
 ```bash
-make clean-zips
+make list-features
 ```
 
 ## Directory Structure
 
 - `data/raw`: Stores raw, downloaded audio files.
-- `data/processed`: Contains preprocessed audio files (organized by gender).
 - `data/features`: Contains extracted features (e.g., pitch, MFCC) in CSV format.
 - `data/zips`: Temporary folder for downloaded zip files.
-
-## Additional Notes
-
-- You can adjust the `DEST_DIR` for all commands to point to a custom location.
-- The `ZIPS_DIR` can also be set to manage where zip files are temporarily stored.
-- Features include `pitch`, `mfcc`, `formant`, `hnr`, `spectral`, and `zero_crossing`.
 
 ## License
 

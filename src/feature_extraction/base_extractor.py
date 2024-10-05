@@ -1,9 +1,18 @@
+import librosa
+import numpy as np
 from abc import ABC, abstractmethod
-from pathlib import Path
 
 class BaseExtractor(ABC):
     @abstractmethod
-    def extract(self, source: Path, feature_list: list[dict]):
-        """Extract features from the source and update the shared feature list."""
+    def extract(self, audio: np.ndarray, sr: int | float) -> dict[str, float]:
+        """
+        Extract features from the provided audio data.
+        
+        Parameters:
+            audio (numpy.ndarray): The audio signal from which to extract features.
+            sr (int): The sampling rate of the audio signal.
+        
+        Returns:
+            dict: A dictionary of extracted features.
+        """
         pass
-
