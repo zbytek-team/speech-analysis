@@ -1,9 +1,20 @@
+import numpy as np
 import librosa
-from pathlib import Path
 from feature_extraction.base_extractor import BaseExtractor
 
 class ZeroCrossingExtractor(BaseExtractor):
-    def extract_single(self, file: Path, entry: dict):
-        y, _ = librosa.load(file, sr=None)
-        zcr = librosa.feature.zero_crossing_rate(y)
-        entry['zero_crossing_rate'] = zcr.mean()
+    def extract(self, audio: np.ndarray, sr: int | float) -> dict:
+        try:
+            zero_crossings = librosa.feature.zero_crossing_rate(audio)[0]
+            zcr_mean = np.mean(zero_crossings)
+            zcr_var = np.var(zero_crossings)
+
+            
+            zero_crossing_features = {
+                "zcr_mean": zcr_mean,
+                "zcr_var": zcr_var,
+
+            }
+            return zero_crossing_features
+        except Exception as e:
+            return {"error": str(e)}
