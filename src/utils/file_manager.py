@@ -1,6 +1,7 @@
 import logging
 import tarfile
 import shutil
+import pandas as pd
 from pathlib import Path
 
 
@@ -36,4 +37,3 @@ def delete_directory_if_exists(path: Path):
         logging.info(f"Removed directory: {path}")
     else:
         logging.debug(f"Directory does not exist: {path}")
-
