@@ -1,16 +1,20 @@
+import numpy as np
 import librosa
-from pathlib import Path
-from tqdm import tqdm
 from feature_extraction.base_extractor import BaseExtractor
 
 class ZeroCrossingExtractor(BaseExtractor):
-    def extract(self, source: Path, feature_list: list[dict]):
-        """Extract Zero Crossing Rate from audio files and update the shared feature list."""
-        for file_dict in tqdm(feature_list, desc="Extracting Zero Crossing Rate"):
-            file_name = file_dict["file"]
-            audio_path = source / file_name
-            y, _ = librosa.load(str(audio_path))
-            zcr = librosa.feature.zero_crossing_rate(y).mean()
+    def extract(self, audio: np.ndarray, sr: int | float) -> dict:
+        try:
+            zero_crossings = librosa.feature.zero_crossing_rate(audio)[0]
+            zcr_mean = np.mean(zero_crossings)
+            zcr_var = np.var(zero_crossings)
 
-            file_dict["zero_crossing_rate"] = zcr
+            
+            zero_crossing_features = {
+                "zcr_mean": zcr_mean,
+                "zcr_var": zcr_var,
 
+            }
+            return zero_crossing_features
+        except Exception as e:
+            return {"error": str(e)}
