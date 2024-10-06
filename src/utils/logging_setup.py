@@ -16,9 +16,9 @@ def setup_logging(level=logging.INFO):
         'CRITICAL': 'bold_red',
     }
     
-    log_dir = "logs"
-    if not os.path.exists(log_dir):
-        os.makedirs(log_dir)
+    log_dir = Path("logs")
+    if not log_dir.exists():
+        path.mkdir(parents=True, exist_ok=True)
 
     current_date = datetime.now().strftime("%Y-%m-%d")
 
