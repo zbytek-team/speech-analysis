@@ -17,8 +17,7 @@ def setup_logging(level=logging.INFO):
     }
     
     log_dir = Path("logs")
-    if not log_dir.exists():
-        path.mkdir(parents=True, exist_ok=True)
+    log_dir.mkdir(parents=True, exist_ok=True) #creates dir if not exits
 
     current_date = datetime.now().strftime("%Y-%m-%d")
 
