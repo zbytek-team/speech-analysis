@@ -22,7 +22,7 @@ def setup_logging(level=logging.INFO):
 
     current_date = datetime.now().strftime("%Y-%m-%d")
 
-    LOGGING_FILENAME = log_dir / f'log_{current_date}.log')
+    LOGGING_FILENAME = log_dir / f'log_{current_date}.log'
 
     console_handler = colorlog.StreamHandler()
     console_handler.setFormatter(colorlog.ColoredFormatter(
