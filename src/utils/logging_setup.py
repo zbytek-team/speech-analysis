@@ -23,6 +23,8 @@ def setup_logging(level=logging.INFO):
 
     LOGGING_FILENAME = log_dir / f'log_{current_date}.log'
 
+    Path(LOGGING_FILENAME).write_text("") #clear current logging file
+
     console_handler = colorlog.StreamHandler()
     console_handler.setFormatter(colorlog.ColoredFormatter(
         LOGGING_FORMAT,
