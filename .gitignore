@@ -1,3 +1,6 @@
+/article/main*
+!/article/main.tex
+
 /data
 /analysis_results
 /tmp
