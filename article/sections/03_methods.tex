@@ -1,0 +1,17 @@
+\section{Zbieranie danych}
+
+W ramach badania wykorzystano bazy danych mowy, takie jak Mozilla Common Voice, YouTube oraz inne zbiory mowy publicznej. Wszystkie nagrania zostały przetworzone pod kątem zgodności z wymogami jakości oraz odpowiednio przefiltrowane, aby zapewnić poprawność danych.
+
+\section{Przetwarzanie danych}
+
+Nagrania mowy zostały najpierw poddane wstępnemu przetwarzaniu, które obejmowało usunięcie ciszy z początku i końca nagrania przy użyciu FFmpeg. Następnie z każdego nagrania dokonano ekstrakcji cech akustycznych za pomocą bibliotek librosa i praat-parselmouth, co pozwoliło na zminimalizowanie liczby odczytów plików.
+
+\section{Ekstrakcja cech}
+
+Do ekstrakcji cech wykorzystano następujące narzędzia:
+\begin{itemize}
+    \item \textbf{Librosa}: wyznaczono współczynniki Mel-frequency cepstral coefficients (MFCC) oraz analizę widmową.
+    \item \textbf{Praat-Parselmouth}: uzyskano formanty, wysokość dźwięku (pitch) oraz intensywność.
+\end{itemize}
+
+Cechy te zostały zebrane w formie tabeli i zapisane w plikach CSV.

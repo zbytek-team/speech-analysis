@@ -1,0 +1,52 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{longtable}
+\usepackage{natbib}
+\usepackage{todonotes}
+\usepackage[T1]{fontenc}
+
+
+% Tytuł artykułu, autorzy, data
+\title{Analiza częstotliwościowa mowy w różnych językach: Weryfikacja teorii Tomatisa}
+\author{Imię i Nazwisko}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+% Streszczenie
+\begin{abstract}
+    \input{sections/01_abstract.tex}
+\end{abstract}
+
+\tableofcontents
+
+% Sekcje artykułu
+\section{Wprowadzenie}
+\input{sections/02_introduction.tex}
+
+\section{Metody}
+\input{sections/03_methods.tex}
+
+\section{Wyniki}
+\input{sections/04_results.tex}
+
+\section{Dyskusja}
+\input{sections/05_discussion.tex}
+
+\section{Wnioski}
+\input{sections/06_conclusion.tex}
+
+% Podziękowania
+\section*{Podziękowania}
+\input{sections/07_acknowledgements.tex}
+
+% Bibliografia
+\bibliographystyle{plainnat}
+\bibliography{sections/08_references.bib}
+
+\end{document}
