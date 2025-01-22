@@ -48,7 +48,7 @@ The notebook defines the most differentiable features from the dataset using dif
 
 ## Clustering Evaluation
 
-To ensure the selected features are indeed the best, a clustering check was performed on every feature. The clustering results were evaluated using three metrics: Adjusted Rand Index (ARI), Normalized Mutual Information (NMI), and Silhouette Score.
+To ensure the selected features are indeed the best, a clustering check was performed on every feature. The clustering results were evaluated using two metrics: Adjusted Rand Index (ARI) and Normalized Mutual Information (NMI).
 
 ### Clustering Process
 
@@ -57,11 +57,10 @@ To ensure the selected features are indeed the best, a clustering check was perf
 3. **Evaluation Metrics**:
    - **Adjusted Rand Index (ARI)**: Measures the similarity between the clustering labels and the true labels, adjusted for chance.
    - **Normalized Mutual Information (NMI)**: Measures the mutual information between the clustering labels and the true labels, normalized to account for the size of the clusters.
-   - **Silhouette Score**: Measures how similar each point is to its own cluster compared to other clusters.
 
 ### Results
 
-The best features were selected based on their combined scores of ARI, NMI, and Silhouette Score. The top three pairs of features were then used to perform clustering on the dataset, and the results were visualized on 2D graphs.
+The best features were selected based on their combined scores of ARI and NMI. The top three pairs of features were then used to perform clustering on the dataset, and the results were visualized on 2D graphs.
 
 ### Visualization
 
@@ -69,4 +68,4 @@ The clustering results for the top three pairs of features were visualized on 2D
 
 ## Conclusion
 
-The clustering evaluation confirmed that the best features selected during the feature selection process also performed well in clustering tasks. The combined scores of ARI, NMI, and Silhouette Score were used to identify the top features, and the visualizations provided a clear understanding of the clustering results.
+The combined scores of ARI and NMI were used to identify the top features, and the visualizations provided a clear understanding of the clustering results. Interestingly, the clustering analysis revealed that the features identified as the best by the feature selection algorithms did not necessarily yield the best clustering results, suggesting that different features may be more effective for clustering purposes.
