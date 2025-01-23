@@ -53,14 +53,14 @@ To ensure the selected features are indeed the best, a clustering check was perf
 ### Clustering Process
 
 1. **KMeans Clustering**: The KMeans algorithm was used to divide the data into clusters. Each feature was used individually to perform clustering.
-2. **Label Mapping**: After clustering, the cluster labels were mapped to the most common true label in each cluster. This mapping helps in comparing the clustering results with the actual labels.
+2. **Label Mapping**: After clustering, the cluster labels were mapped to the most common true label in each cluster. This mapping helps in comparing the clustering results with the actual labels. We also tried another approach to ensure that each cluster has a unique label. In this approach, each language is assigned to the cluster where it is most dominant. If a language dominates in multiple clusters, it is assigned to the cluster with the highest number of samples. If there are ties, the cluster with the fewest samples of any other kind is chosen.
 3. **Evaluation Metrics**:
    - **Adjusted Rand Index (ARI)**: Measures the similarity between the clustering labels and the true labels, adjusted for chance.
    - **Normalized Mutual Information (NMI)**: Measures the mutual information between the clustering labels and the true labels, normalized to account for the size of the clusters.
 
 ### Results
 
-The best features were selected based on their combined scores of ARI and NMI. The top three pairs of features were then used to perform clustering on the dataset, and the results were visualized on 2D graphs.
+The best features were selected based on their combined scores of ARI and NMI. The top three pairs of features were then used to perform clustering on the dataset, and the results were visualized on 2D graphs. Furhtermore, the clustering analysis revealed that the features identified as the best by the feature selection algorithms did not necessarily yield the best clustering results. The scores for Adjusted Rand Index (ARI) and Normalized Mutual Information (NMI) were relatively small, with a maximum value of around 0.16 for ARI and 0.28 for NMI, indicating that the clustering performance was not strongly aligned with the true labels.
 
 ### Visualization
 
